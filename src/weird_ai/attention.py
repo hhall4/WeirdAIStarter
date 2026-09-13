@@ -34,27 +34,20 @@ class SelfAttention(nn.Module):
         self.value = nn.Linear(embedding_dim, output_dim, bias=qkv_bias)
 
     def forward(self, x):
-        """
-        Args:
-            x: Tensor of shape (num_tokens, embedding_dim)
-
-        Returns:
-            context_vectors: Tensor of shape (num_tokens, output_dim)
-            attention_weights: Tensor of shape (num_tokens, num_tokens)
-        """
-
         queries = self.query(x)
         keys = self.key(x)
         values = self.value(x)
 
-        scores = queries @ keys.T
-        scores = scores / keys.shape[-1] ** 0.5
+        scores = queries @ keys.transpose(-2, -1)
 
-        weights = torch.softmax(scores, dim=-1)
+        attention_weights = torch.softmax(
+            scores / keys.shape[-1] ** 0.5,
+            dim=-1
+        )
 
-        context_vectors = weights @ values
+        context_vectors = attention_weights @ values
 
-        return context_vectors, weights 
+        return context_vectors
 
         raise NotImplementedError("Implement trainable self-attention.")
 
