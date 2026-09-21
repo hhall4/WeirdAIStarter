@@ -22,16 +22,19 @@ def calc_loss_batch(input_batch, target_batch, model, device):
         A scalar loss tensor.
     """
 
-    # TODO:
-    # 1. Move input_batch and target_batch to the selected device.
-    # 2. Run input_batch through the model to get logits.
-    # 3. Reshape logits so cross_entropy sees:
-    #       (batch_size * num_tokens, vocab_size)
-    # 4. Reshape targets so cross_entropy sees:
-    #       (batch_size * num_tokens)
-    # 5. Return cross-entropy loss.
+    input_batch = input_batch.to(device)
+    target_batch = target_batch.to(device)
 
-    raise NotImplementedError("Implement calc_loss_batch.")
+    logits = model(input_batch)
+
+    batch_size, num_tokens, vocab_size = logits.shape
+
+    logits = logits.reshape(batch_size * num_tokens, vocab_size)
+    target_batch = target_batch.reshape(batch_size * num_tokens)
+
+    loss = F.cross_entropy(logits, target_batch)
+
+    return loss
 
 
 def calc_loss_loader(data_loader, model, device, num_batches=None):
@@ -48,14 +51,30 @@ def calc_loss_loader(data_loader, model, device, num_batches=None):
         Average loss as a float.
     """
 
-    # TODO:
-    # 1. Handle an empty data loader.
-    # 2. Determine how many batches to evaluate.
-    # 3. Loop through the data loader.
-    # 4. Calculate loss for each batch.
-    # 5. Return the average loss.
+    if len(data_loader) == 0:
+        return float("nan")
 
-    raise NotImplementedError("Implement calc_loss_loader.")
+    if num_batches is None:
+        num_batches = len(data_loader)
+    else:
+        num_batches = min(num_batches, len(data_loader))
+
+    total_loss = 0.0
+
+    for i, (input_batch, target_batch) in enumerate(data_loader):
+        if i >= num_batches:
+            break
+
+        loss = calc_loss_batch(
+            input_batch,
+            target_batch,
+            model,
+            device
+        )
+
+        total_loss += loss.item()
+
+    return total_loss / num_batches
 
 
 def calculate_perplexity(loss):
@@ -69,7 +88,7 @@ def calculate_perplexity(loss):
         Perplexity value.
     """
 
-    # TODO:
-    # Perplexity is exp(loss).
+    if isinstance(loss, torch.Tensor):
+        return torch.exp(loss)
 
-    raise NotImplementedError("Implement calculate_perplexity.")
+    return torch.exp(torch.tensor(loss))

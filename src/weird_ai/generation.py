@@ -20,12 +20,11 @@ def text_to_token_ids(text, tokenizer):
         A tensor of shape (1, num_tokens).
     """
 
-    # TODO:
-    # 1. Use the tokenizer to encode the text.
-    # 2. Convert the encoded list into a torch tensor.
-    # 3. Add a batch dimension using unsqueeze(0).
+    token_ids = tokenizer.encode(text)
+    token_ids = torch.tensor(token_ids, dtype=torch.long)
+    token_ids = token_ids.unsqueeze(0)
 
-    raise NotImplementedError("Implement text_to_token_ids.")
+    return token_ids
 
 
 def token_ids_to_text(token_ids, tokenizer):
@@ -40,12 +39,12 @@ def token_ids_to_text(token_ids, tokenizer):
         The decoded text as a string.
     """
 
-    # TODO:
-    # 1. Remove the batch dimension if present.
-    # 2. Convert the tensor to a Python list.
-    # 3. Use the tokenizer to decode the list.
+    if token_ids.dim() > 1:
+        token_ids = token_ids.squeeze(0)
 
-    raise NotImplementedError("Implement token_ids_to_text.")
+    token_ids = token_ids.tolist()
+
+    return tokenizer.decode(token_ids)
 
 
 def generate_text_simple(model, input_ids, max_new_tokens, context_size):
@@ -62,15 +61,19 @@ def generate_text_simple(model, input_ids, max_new_tokens, context_size):
         Tensor containing the original input IDs plus generated token IDs.
     """
 
-    # TODO:
-    # Repeat max_new_tokens times:
-    # 1. Crop input_ids to the most recent context_size tokens.
-    # 2. Pass the cropped input into the model to get logits.
-    # 3. Select only the logits for the last time step.
-    # 4. Use argmax to choose the most likely next token.
-    # 5. Append that token to input_ids.
+    for _ in range(max_new_tokens):
+        idx_cond = input_ids[:, -context_size:]
 
-    raise NotImplementedError("Implement generate_text_simple.")
+        with torch.no_grad():
+            logits = model(idx_cond)
+
+        logits = logits[:, -1, :]
+
+        next_token = torch.argmax(logits, dim=-1, keepdim=True)
+
+        input_ids = torch.cat((input_ids, next_token), dim=1)
+
+    return input_ids
 
 
 def generate_and_print_sample(model, tokenizer, device, start_context, context_size, max_new_tokens=50):
@@ -91,11 +94,19 @@ def generate_and_print_sample(model, tokenizer, device, start_context, context_s
 
     model.eval()
 
-    # TODO:
-    # 1. Convert start_context to token IDs.
-    # 2. Move token IDs to the selected device.
-    # 3. Generate new token IDs.
-    # 4. Convert generated token IDs back to text.
-    # 5. Print the generated text.
+    encoded = text_to_token_ids(start_context, tokenizer)
+    encoded = encoded.to(device)
 
-    raise NotImplementedError("Implement generate_and_print_sample.")
+    with torch.no_grad():
+        generated_ids = generate_text_simple(
+            model,
+            encoded,
+            max_new_tokens,
+            context_size
+        )
+
+    decoded_text = token_ids_to_text(generated_ids, tokenizer)
+
+    print(decoded_text)
+
+    model.train()
