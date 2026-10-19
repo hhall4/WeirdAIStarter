@@ -1,3 +1,4 @@
+
 """
 Reasoning prompt helpers for Weird AI.
 
@@ -15,9 +16,6 @@ def build_reasoning_prompt(user_prompt):
     """
     Convert a normal user prompt into a general reasoning prompt.
 
-    The returned prompt should encourage the model to think through the task
-    before giving its final answer.
-
     Args:
         user_prompt: The original user request as a string.
 
@@ -25,22 +23,21 @@ def build_reasoning_prompt(user_prompt):
         A formatted prompt string that includes the original task and asks for
         step-by-step reasoning.
     """
+    return f"""You are Weird AI.
 
-    # TODO:
-    # 1. Include a short role statement such as "You are Weird AI."
-    # 2. Include the phrase "Think step-by-step."
-    # 3. Include the original user_prompt.
-    # 4. Include a clear "Final Answer:" section.
+Think step-by-step.
 
-    raise NotImplementedError("Implement build_reasoning_prompt.")
+Task:
+{user_prompt}
+
+Final Answer:
+Provide your final answer here.
+"""
 
 
 def build_parody_reasoning_prompt(topic):
     """
     Build a reasoning prompt specifically for parody lyric generation.
-
-    This prompt should guide Weird AI through a simple creative planning process
-    before asking it to write the final parody lyrics.
 
     Args:
         topic: The parody topic or user request as a string.
@@ -48,27 +45,27 @@ def build_parody_reasoning_prompt(topic):
     Returns:
         A formatted prompt string with step-by-step parody planning sections.
     """
+    return f"""You are Weird AI, a humorous parody lyric writer.
 
-    # TODO:
-    # Create a prompt that includes:
-    # 1. The phrase "Think step-by-step."
-    # 2. The topic provided by the user.
-    # 3. At least these planning steps:
-    #    - Identify the topic.
-    #    - Identify funny ideas or exaggerations.
-    #    - Identify possible rhymes.
-    #    - Write the final parody lyrics.
-    # 4. A clear "Final Parody:" section.
+Think step-by-step.
 
-    raise NotImplementedError("Implement build_parody_reasoning_prompt.")
+Topic:
+{topic}
+
+Planning Steps:
+1. Identify the topic and the main idea of the parody.
+2. Identify funny ideas, absurd situations, or exaggerations related to the topic.
+3. Identify possible rhymes, repeated phrases, and humorous wordplay.
+4. Use the ideas and rhymes to write entertaining parody lyrics.
+
+Final Parody:
+Write the completed parody lyrics here.
+"""
 
 
 def build_closed_world_prompt(premises, question):
     """
     Build a prompt for closed-world reasoning.
-
-    Closed-world reasoning means the model should answer using only the facts
-    explicitly provided in the prompt. It should not use outside knowledge.
 
     Args:
         premises: A list of premise strings.
@@ -77,23 +74,38 @@ def build_closed_world_prompt(premises, question):
     Returns:
         A formatted prompt string for closed-world reasoning.
     """
+    premise_list = "\n".join(
+        f"{index}. {premise}"
+        for index, premise in enumerate(premises, start=1)
+    )
 
-    # TODO:
-    # 1. Tell the model to use only the provided premises.
-    # 2. Include each premise in a readable list.
-    # 3. Include the question.
-    # 4. Include a "Reasoning:" section and an "Answer:" section.
+    if not premise_list:
+        premise_list = "No premises were provided."
 
-    raise NotImplementedError("Implement build_closed_world_prompt.")
+    return f"""You are Weird AI, an assistant performing closed-world reasoning.
+
+Use only the facts explicitly provided in the premises below.
+Do not use outside knowledge or assume facts that are not stated.
+If the premises do not provide enough information to answer the question,
+state that the answer cannot be determined from the provided premises.
+
+Premises:
+{premise_list}
+
+Question:
+{question}
+
+Reasoning:
+Explain how the provided premises support your conclusion.
+
+Answer:
+Provide your answer using only the provided premises.
+"""
 
 
 def build_open_world_prompt(premises, question):
     """
     Build a prompt for open-world reasoning.
-
-    Open-world reasoning allows the model to consider both the provided premises
-    and relevant background knowledge. This can reveal contradictions between
-    the prompt and the model's background knowledge.
 
     Args:
         premises: A list of premise strings.
@@ -102,14 +114,32 @@ def build_open_world_prompt(premises, question):
     Returns:
         A formatted prompt string for open-world reasoning.
     """
+    premise_list = "\n".join(
+        f"{index}. {premise}"
+        for index, premise in enumerate(premises, start=1)
+    )
 
-    # TODO:
-    # 1. Tell the model it may use relevant background knowledge.
-    # 2. Ask it to check whether the premises conflict with known facts.
-    # 3. Include each premise in a readable list.
-    # 4. Include the question.
-    # 5. Include a "Reasoning:" section and an "Answer:" section.
+    if not premise_list:
+        premise_list = "No premises were provided."
 
-    raise NotImplementedError("Implement build_open_world_prompt.")
+    return f"""You are Weird AI, an assistant performing open-world reasoning.
 
+You may use the provided premises and relevant background knowledge.
+Check whether any premises conflict with established facts or with one another.
+Clearly distinguish information stated in the premises from outside knowledge.
+If information is uncertain or a contradiction cannot be resolved, explain that
+uncertainty rather than presenting an unsupported conclusion.
 
+Premises:
+{premise_list}
+
+Question:
+{question}
+
+Reasoning:
+Evaluate the premises, consider relevant background knowledge, identify any
+contradictions, and explain how the available information supports your answer.
+
+Answer:
+Provide your answer, noting any relevant contradictions or uncertainties.
+"""
